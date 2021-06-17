@@ -2,12 +2,17 @@
 This package contains the docker compose to set up Apache Airflow locally or in production. It also contains all the PW DAGs.
 
 ## Installation
-1. Create the database and the required `.env` file:
+1. Configure `.env` file:
+```
+echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env
+```
+
+2. Execute init script:
 ```
 docker-compose up airflow-init
 ```
 
-2. Start the docker-compose:
+3. Start the docker-compose:
 ```
 docker-compose up
 ```
