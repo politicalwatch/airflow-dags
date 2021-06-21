@@ -2,6 +2,28 @@
 This package contains the docker compose to set up Apache Airflow locally or in production. It also contains all the PW DAGs.
 
 ## Installation
+
+### Local installation:
+
+1. Execute the local_install.sh script:
+```
+sh local_install.sh
+```
+
+2. Copy the `airflow.cfg.example` into `airflow.cfg` and configure the paths to point to this folder.
+```
+cp airflow.cfg.example airflow.cfg
+```
+
+3. Make sure the variable `AIRFLOW_HOME` is configured in your system and it is pointing to this folder.
+
+4. From now on, you can start the webserver and scheduler(this one is necessary to scan the DAGs folder and add our custom DAGs) with the next commands:
+```
+airflow webserver
+airflow scheduler
+```
+
+### On a server:
 1. Configure `.env` file:
 ```
 echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env

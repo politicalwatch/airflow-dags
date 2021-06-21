@@ -75,6 +75,8 @@ services:
       interval: 5s
       retries: 5
     restart: always
+    networks:
+      - airflownet
 
   redis:
     image: redis:latest
@@ -86,6 +88,8 @@ services:
       timeout: 30s
       retries: 50
     restart: always
+    networks:
+      - airflownet
 
   airflow-webserver:
     <<: *airflow-common
@@ -98,6 +102,8 @@ services:
       timeout: 10s
       retries: 5
     restart: always
+    networks:
+      - airflownet
 
   airflow-scheduler:
     <<: *airflow-common
@@ -108,6 +114,8 @@ services:
       timeout: 10s
       retries: 5
     restart: always
+    networks:
+      - airflownet
 
   airflow-worker:
     <<: *airflow-common
@@ -120,6 +128,8 @@ services:
       timeout: 10s
       retries: 5
     restart: always
+    networks:
+      - airflownet
 
   airflow-init:
     <<: *airflow-common
@@ -130,6 +140,8 @@ services:
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+    networks:
+      - airflownet
 
   flower:
     <<: *airflow-common
@@ -142,6 +154,12 @@ services:
       timeout: 10s
       retries: 5
     restart: always
+    networks:
+      - airflownet
 
 volumes:
   postgres-db-volume:
+
+networks:
+  airflownet:
+    name: tipi_network
