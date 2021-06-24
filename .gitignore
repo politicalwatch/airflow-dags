@@ -1,5 +1,6 @@
 .env
 logs/*
+keys/*
 dags/__pycache__
 airflow.cfg
 airflow.db

@@ -11,7 +11,7 @@ with DAG(
 ) as dag:
     start = BashOperator(
         task_id="start",
-        bash_command="echo 'Hi'"
+        bash_command="echo 'Starting initiative and tagging extraction on local'"
     )
 
     extract = BashOperator(
