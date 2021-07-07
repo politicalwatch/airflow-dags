@@ -81,7 +81,16 @@ with DAG(
         data=json.dumps({'message': 'Finalizada extración y taggeado en P2030.'})
     )
 
-    slack_start >> extract >> slack_tag >> tag >> slack_alerts >> alerts >> slack_stats >> stats >> slack_end
+    notify_error = SimpleHttpOperator(
+        task_id='notify_error',
+        headers={"Content-Type": "application/json"},
+        http_conn_id="n8n_slack",
+        endpoint='webhook/868e2659-d6bd-407e-aa75-6a8ed4ebbd4c',
+        data=json.dumps({'message': 'Error durante la ejecucion.'}),
+        trigger_rule='one_failed'
+    )
+
+    slack_start >> extract >> slack_tag >> tag >> slack_alerts >> alerts >> slack_stats >> stats >> slack_end >> notify_error
 
 if __name__ == "__main__":
     dag.cli()

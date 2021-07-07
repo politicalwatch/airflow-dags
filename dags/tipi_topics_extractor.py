@@ -22,7 +22,7 @@ with DAG(
         headers={"Content-Type": "application/json"},
         http_conn_id="n8n_slack",
         endpoint='webhook/868e2659-d6bd-407e-aa75-6a8ed4ebbd4c',
-        data=json.dumps({'message': 'Empezando extración de topics.'})
+        data=json.dumps({'message': 'Empezando extración de topics de TIPI.'})
     )
 
     extract = BashOperator(
@@ -76,7 +76,16 @@ with DAG(
         data=json.dumps({'message': 'Terminada la extraccion e importado de los topics.'})
     )
 
-    slack_start >> extract >> slack_upload >> copy >> upload >> slack_import >> copy_to_docker >> import_topics >> slack_end
+    notify_error = SimpleHttpOperator(
+        task_id='notify_error',
+        headers={"Content-Type": "application/json"},
+        http_conn_id="n8n_slack",
+        endpoint='webhook/868e2659-d6bd-407e-aa75-6a8ed4ebbd4c',
+        data=json.dumps({'message': 'Error durante la ejecucion.'}),
+        trigger_rule='one_failed'
+    )
+
+    slack_start >> extract >> slack_upload >> copy >> upload >> slack_import >> copy_to_docker >> import_topics >> slack_end >> notify_error
 
 if __name__ == "__main__":
     dag.cli()
