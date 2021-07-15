@@ -22,7 +22,7 @@ with DAG(
         headers={"Content-Type": "application/json"},
         http_conn_id="n8n_slack",
         endpoint='webhook/868e2659-d6bd-407e-aa75-6a8ed4ebbd4c',
-        data=json.dumps({'message': 'Empezando extración de iniciativas en P2030.'})
+        data=json.dumps({'message': 'Empezando el procesamiento diario de datos de P2030.'})
     )
 
     extract = SSHOperator(
@@ -31,40 +31,16 @@ with DAG(
         ssh_hook=ssh
     )
 
-    slack_tag = SimpleHttpOperator(
-        task_id='slack_tag',
-        headers={"Content-Type": "application/json"},
-        http_conn_id="n8n_slack",
-        endpoint='webhook/868e2659-d6bd-407e-aa75-6a8ed4ebbd4c',
-        data=json.dumps({'message': 'Empezando taggeado de iniciativas en P2030.'})
-    )
-
     tag = SSHOperator(
         task_id="tag",
         command="docker exec tipi-engine python quickex.py tagger all",
         ssh_hook=ssh
     )
 
-    slack_alerts = SimpleHttpOperator(
-        task_id='slack_alerts',
-        headers={"Content-Type": "application/json"},
-        http_conn_id="n8n_slack",
-        endpoint='webhook/868e2659-d6bd-407e-aa75-6a8ed4ebbd4c',
-        data=json.dumps({'message': 'Enviando alertas en P2030.'})
-    )
-
     alerts = SSHOperator(
         task_id="alerts",
         command="docker exec tipi-engine python quickex.py alerts",
         ssh_hook=ssh
-    )
-
-    slack_stats = SimpleHttpOperator(
-        task_id='slack_stats',
-        headers={"Content-Type": "application/json"},
-        http_conn_id="n8n_slack",
-        endpoint='webhook/868e2659-d6bd-407e-aa75-6a8ed4ebbd4c',
-        data=json.dumps({'message': 'Actualizando stats en P2030.'})
     )
 
     stats = SSHOperator(
@@ -78,7 +54,7 @@ with DAG(
         headers={"Content-Type": "application/json"},
         http_conn_id="n8n_slack",
         endpoint='webhook/868e2659-d6bd-407e-aa75-6a8ed4ebbd4c',
-        data=json.dumps({'message': 'Finalizada extración y taggeado en P2030.'})
+        data=json.dumps({'message': 'Fin del procesamiento diario de datos de P2030.'})
     )
 
     notify_error = SimpleHttpOperator(
@@ -90,7 +66,7 @@ with DAG(
         trigger_rule='one_failed'
     )
 
-    slack_start >> extract >> slack_tag >> tag >> slack_alerts >> alerts >> slack_stats >> stats >> slack_end >> notify_error
+    slack_start >> extract >> tag >> alerts >> stats >> slack_end >> notify_error
 
 if __name__ == "__main__":
     dag.cli()
