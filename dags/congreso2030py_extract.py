@@ -10,7 +10,7 @@ from airflow.utils.dates import days_ago
 with DAG(
     dag_id="congreso2030py_extract",
     start_date=days_ago(2),
-    schedule_interval='@daily',
+    schedule_interval='@monthly',
     tags=['pro', 'congreso2030py']
 ) as dag:
 
