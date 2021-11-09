@@ -8,20 +8,20 @@ from airflow.utils.dates import days_ago
 
 
 with DAG(
-    dag_id="p2030_extract",
+    dag_id="congreso2030py_extract",
     start_date=days_ago(2),
     schedule_interval='@daily',
-    tags=['pro', 'p2030']
+    tags=['pro', 'congreso2030py']
 ) as dag:
 
-    ssh = SSHHook(ssh_conn_id='p2030', key_file='./keys/pw_airflow')
+    ssh = SSHHook(ssh_conn_id='congreso2030py', key_file='./keys/pw_airflow')
 
     slack_start = SimpleHttpOperator(
         task_id='slack_start',
         headers={"Content-Type": "application/json"},
         http_conn_id="n8n_slack",
         endpoint='webhook/868e2659-d6bd-407e-aa75-6a8ed4ebbd4c',
-        data=json.dumps({'message': 'Empezando el procesamiento diario de datos de P2030.'})
+        data=json.dumps({'message': 'Empezando el procesamiento diario de datos de Congreso2030py.'})
     )
 
     extract_members = SSHOperator(
@@ -59,7 +59,7 @@ with DAG(
         headers={"Content-Type": "application/json"},
         http_conn_id="n8n_slack",
         endpoint='webhook/868e2659-d6bd-407e-aa75-6a8ed4ebbd4c',
-        data=json.dumps({'message': 'Fin del procesamiento diario de datos de P2030.'})
+        data=json.dumps({'message': 'Fin del procesamiento diario de datos de Congreso2030py.'})
     )
 
     notify_error = SimpleHttpOperator(

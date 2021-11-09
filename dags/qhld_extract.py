@@ -3,7 +3,6 @@ import json
 from airflow import DAG
 from airflow.contrib.operators.ssh_operator import SSHOperator
 from airflow.contrib.hooks.ssh_hook import SSHHook
-from airflow.operators.bash import BashOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.utils.dates import days_ago
 
@@ -25,8 +24,14 @@ with DAG(
         data=json.dumps({'message': 'Empezando el procesamiento diario de datos de QHLD.'})
     )
 
-    extract = SSHOperator(
-        task_id="extract",
+    extract_members = SSHOperator(
+        task_id="extract_members",
+        command="docker exec tipi-engine python quickex.py extractor members",
+        ssh_hook=ssh
+    )
+
+    extract_initiatives = SSHOperator(
+        task_id="extract_initiatives",
         command="docker exec tipi-engine python quickex.py extractor initiatives",
         ssh_hook=ssh
     )
@@ -66,7 +71,7 @@ with DAG(
         trigger_rule='one_failed'
     )
 
-    slack_start >> extract >> tag >> alerts >> stats >> slack_end >> notify_error
+    slack_start >> extract_members >> extract_initiatives >> tag >> alerts >> stats >> slack_end >> notify_error
 
 if __name__ == "__main__":
     dag.cli()
