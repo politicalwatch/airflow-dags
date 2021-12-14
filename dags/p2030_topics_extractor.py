@@ -3,7 +3,6 @@ import json
 from airflow import DAG
 from airflow.contrib.operators.ssh_operator import SSHOperator
 from airflow.contrib.hooks.ssh_hook import SSHHook
-from airflow.operators.bash import BashOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.utils.dates import days_ago
 
@@ -15,6 +14,7 @@ with DAG(
     tags=['topics', 'p2030']
 ) as dag:
 
+    ssh_topics = SSHHook(ssh_conn_id='topics', key_file='./keys/pw_airflow')
     ssh = SSHHook(ssh_conn_id='p2030', key_file='./keys/pw_airflow')
 
     slack_start = SimpleHttpOperator(
@@ -25,9 +25,10 @@ with DAG(
         data=json.dumps({'message': 'Empezando extración de topics de P2030.'})
     )
 
-    extract = BashOperator(
+    extract = SSHOperator(
         task_id="extract",
-        bash_command="docker exec topic-extract python app.py parlamento2030.json"
+        command="docker exec topic-extract python app.py parlamento2030.json",
+        ssh_hook=ssh_topics
     )
 
     slack_upload = SimpleHttpOperator(
@@ -38,14 +39,16 @@ with DAG(
         data=json.dumps({'message': 'Subiendo fichero de topics a p2030.'})
     )
 
-    copy = BashOperator(
+    copy = SSHOperator(
         task_id="copy",
-        bash_command="docker cp topic-extract:/app/topics.json ${AIRFLOW_HOME}/topics.json"
+        command="docker cp topic-extract:/app/topics.json ${AIRFLOW_HOME}/topics.json",
+        ssh_hook=ssh_topics
     )
 
-    upload = BashOperator(
+    upload = SSHOperator(
         task_id="upload",
-        bash_command="scp -i ${AIRFLOW_HOME}/keys/pw_airflow ${AIRFLOW_HOME}/topics.json p2030:topics.json"
+        command="scp -i ${AIRFLOW_HOME}/keys/pw_airflow ${AIRFLOW_HOME}/topics.json p2030:topics.json",
+        ssh_hook=ssh_topics
     )
 
     slack_import = SimpleHttpOperator(
