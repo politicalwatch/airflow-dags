@@ -30,6 +30,12 @@ with DAG(
         ssh_hook=ssh
     )
 
+    extract_groups = SSHOperator(
+        task_id="extract_groups",
+        command="docker exec tipi-engine python quickex.py extractor groups",
+        ssh_hook=ssh
+    )
+
     extract_initiatives = SSHOperator(
         task_id="extract_initiatives",
         command="docker exec tipi-engine python quickex.py extractor initiatives",
@@ -71,7 +77,7 @@ with DAG(
         trigger_rule='one_failed'
     )
 
-    slack_start >> extract_members >> extract_initiatives >> tag >> alerts >> stats >> slack_end >> notify_error
+    slack_start >> extract_members >> extract_groups >> extract_initiatives >> tag >> alerts >> stats >> slack_end >> notify_error
 
 if __name__ == "__main__":
     dag.cli()
