@@ -10,7 +10,7 @@ from airflow.utils.dates import days_ago
 with DAG(
     dag_id="qhld_footprint",
     start_date=days_ago(2),
-    schedule_interval='0 12 * * 0',
+    schedule_interval='0 12 * * 7',
     tags=['pro', 'qhld']
 ) as dag:
 
