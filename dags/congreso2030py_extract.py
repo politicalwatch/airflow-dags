@@ -42,12 +42,6 @@ with DAG(
         ssh_hook=ssh
     )
 
-    alerts = SSHOperator(
-        task_id="alerts",
-        command="docker exec tipi-engine python quickex.py alerts",
-        ssh_hook=ssh
-    )
-
     stats = SSHOperator(
         task_id="stats",
         command="docker exec tipi-engine python quickex.py stats",
@@ -71,8 +65,7 @@ with DAG(
         trigger_rule='one_failed'
     )
 
-    slack_start >> extract_members >> extract_initiatives >> tag >> alerts >> stats >> slack_end >> notify_error
+    slack_start >> extract_members >> extract_initiatives >> tag >> stats >> slack_end >> notify_error
 
 if __name__ == "__main__":
     dag.cli()
-
