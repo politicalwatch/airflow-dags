@@ -50,7 +50,7 @@ with DAG(
 
     alerts = SSHOperator(
         task_id="alerts",
-        command="docker exec tipi-engine python quickex.py alerts",
+        command="docker exec tipi-engine python quickex.py send-alerts",
         ssh_hook=ssh
     )
 
