@@ -30,6 +30,18 @@ with DAG(
         ssh_hook=ssh
     )
 
+    calculate_stats = SSHOperator(
+        task_id="calculate_stats",
+        command="docker exec engine python command.py calculate-stats",
+        ssh_hook=ssh
+    )
+
+    api_extract = SSHOperator(
+        task_id="api_extract",
+        command="docker exec engine python command.py api-extract",
+        ssh_hook=ssh
+    )
+
     slack_end = SimpleHttpOperator(
         task_id='slack_end',
         headers={"Content-Type": "application/json"},
@@ -47,9 +59,7 @@ with DAG(
         trigger_rule='one_failed'
     )
 
-    slack_start >> extract_subtitles >> slack_end >> notify_error
+    slack_start >> extract_subtitles >> calculate_stats >> api_extract >> slack_end >> notify_error
 
 if __name__ == "__main__":
     dag.cli()
-
-
