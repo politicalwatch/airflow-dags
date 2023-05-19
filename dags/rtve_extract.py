@@ -24,21 +24,15 @@ with DAG(
         data=json.dumps({'message': 'Extrayendo nuevos subtítulos de RTVE.'})
     )
 
-    extract_subtitles = SSHOperator(
-        task_id="extract_subtitles",
-        command="docker exec engine python command.py load-programs",
+    api_extract = SSHOperator(
+        task_id="api_extract",
+        command="docker exec engine python command.py api-extract",
         ssh_hook=ssh
     )
 
     calculate_stats = SSHOperator(
         task_id="calculate_stats",
         command="docker exec engine python command.py calculate-stats",
-        ssh_hook=ssh
-    )
-
-    api_extract = SSHOperator(
-        task_id="api_extract",
-        command="docker exec engine python command.py api-extract",
         ssh_hook=ssh
     )
 
@@ -59,7 +53,7 @@ with DAG(
         trigger_rule='one_failed'
     )
 
-    slack_start >> extract_subtitles >> calculate_stats >> api_extract >> slack_end >> notify_error
+    slack_start >> api_extract >> calculate_stats >> slack_end >> notify_error
 
 if __name__ == "__main__":
     dag.cli()
