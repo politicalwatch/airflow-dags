@@ -47,7 +47,7 @@ with DAG(
         trigger_rule='one_failed'
     )
 
-    slack_start >> footprint_calc >> slack_end >> notify_error
+    footprint_calc
 
 if __name__ == "__main__":
     dag.cli()
