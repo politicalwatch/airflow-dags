@@ -4,7 +4,7 @@ import os
 from airflow import DAG
 from airflow.contrib.operators.ssh_operator import SSHOperator
 from airflow.contrib.hooks.ssh_hook import SSHHook
-from airflow.providers.slack.operators.slack_api import SlackAPIPostOperator
+from airflow.providers.slack.operators.slack import SlackAPIPostOperator
 from airflow.utils.dates import days_ago
 
 
