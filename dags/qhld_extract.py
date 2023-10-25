@@ -20,7 +20,7 @@ with DAG(
     ssh = SSHHook(ssh_conn_id='qhld', key_file='./keys/pw_airflow')
     
     slack_start = SlackAPIPostOperator(
-        task_id='send_slack_start_message',
+        task_id='slack_start',
         slack_conn_id="slack_api_default",
         text='Empezando el procesamiento diario de datos de QHLD.',
         channel='#tech',
@@ -69,14 +69,14 @@ with DAG(
     )
     
     slack_end = SlackAPIPostOperator(
-        task_id='send_slack_end_message',
+        task_id='slack_end',
         slack_conn_id="slack_api_default",
         text='Fin del procesamiento diario de datos de QHLD.',
         channel='#tech',
     )
     
     notify_error = SlackAPIPostOperator(
-        task_id='send_slack_error_message',
+        task_id='notify_error',
         slack_conn_id="slack_api_default",
         text='Error durante la ejecucion (QHLD).',
         channel='#tech',
