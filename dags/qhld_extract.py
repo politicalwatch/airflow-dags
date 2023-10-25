@@ -19,6 +19,7 @@ with DAG(
     
     slack_start = SlackAPIPostOperator(
         task_id='send_slack_message',
+        slack_conn_id="slack_api_default",
         token=os.environ.get('SLACK_API_TOKEN'),
         text='Empezando el procesamiento diario de datos de QHLD.',
         channel='#tech',
@@ -68,6 +69,7 @@ with DAG(
     
     slack_end = SlackAPIPostOperator(
         task_id='send_slack_message',
+        slack_conn_id="slack_api_default",
         token=os.environ.get('SLACK_API_TOKEN'),
         text='Fin del procesamiento diario de datos de QHLD.',
         channel='#tech',
@@ -75,6 +77,7 @@ with DAG(
     
     notify_error = SlackAPIPostOperator(
         task_id='send_slack_message',
+        slack_conn_id="slack_api_default",
         token=os.environ.get('SLACK_API_TOKEN'),
         text='Error durante la ejecucion (QHLD).',
         channel='#tech',
