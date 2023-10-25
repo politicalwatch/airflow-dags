@@ -2,11 +2,13 @@ import json
 
 import os
 from airflow import DAG
+from airflow.models import Variable
 from airflow.contrib.operators.ssh_operator import SSHOperator
 from airflow.contrib.hooks.ssh_hook import SSHHook
 from airflow.providers.slack.operators.slack import SlackAPIPostOperator
 from airflow.utils.dates import days_ago
 
+slack_token = Variable.get("SLACK_API_TOKEN")
 
 with DAG(
     dag_id="qhld_extract",
@@ -20,7 +22,7 @@ with DAG(
     slack_start = SlackAPIPostOperator(
         task_id='send_slack_message',
         slack_conn_id="slack_api_default",
-        token=os.environ.get('SLACK_API_TOKEN'),
+        token=slack_token,
         text='Empezando el procesamiento diario de datos de QHLD.',
         channel='#tech',
     )
@@ -70,7 +72,7 @@ with DAG(
     slack_end = SlackAPIPostOperator(
         task_id='send_slack_message',
         slack_conn_id="slack_api_default",
-        token=os.environ.get('SLACK_API_TOKEN'),
+        token=slack_token,
         text='Fin del procesamiento diario de datos de QHLD.',
         channel='#tech',
     )
@@ -78,7 +80,7 @@ with DAG(
     notify_error = SlackAPIPostOperator(
         task_id='send_slack_message',
         slack_conn_id="slack_api_default",
-        token=os.environ.get('SLACK_API_TOKEN'),
+        token=slack_token,
         text='Error durante la ejecucion (QHLD).',
         channel='#tech',
         trigger_rule='one_failed'
