@@ -49,14 +49,19 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__FERNET_KEY: ""
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-    AIRFLOW__API__AUTH_BACKEND: "airflow.api.auth.backend.basic_auth"
+    AIRFLOW__API__AUTH_BACKEND: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
+    # yamllint disable rule:line-length
+    # Use simple http server on scheduler for health checks
+    # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
+    # yamllint enable rule:line-length
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./config:/opt/airflow/config
     - ./plugins:/opt/airflow/plugins
     - ./keys:/opt/airflow/keys
-  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+  user: "${AIRFLOW_UID:-50000}:0"
   depends_on: &airflow-common-depends-on
     redis:
       condition: service_healthy
@@ -77,7 +82,7 @@ services:
       interval: 10s
       retries: 5
       start_period: 5s
-    restart: unless-stopped
+    restart: always
     networks:
       - airflownet
 
@@ -91,7 +96,7 @@ services:
       timeout: 30s
       retries: 50
       start_period: 30s
-    restart: unless-stopped
+    restart: always
     networks:
       - airflownet
 
@@ -106,7 +111,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
-    restart: unless-stopped
+    restart: always
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -123,7 +128,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
-    restart: unless-stopped
+    restart: always
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -148,7 +153,7 @@ services:
       # Required to handle warm shutdown of the celery workers properly
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
       DUMB_INIT_SETSID: "0"
-    restart: unless-stopped
+    restart: always
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -187,7 +192,7 @@ services:
         function ver() {
           printf "%04d%04d%04d%04d" $${1//./ }
         }
-        airflow_version=$$(AIRFLOW__LOGGING__LOGGING_LEVEL=INFO && gosu airflow airflow version)
+        airflow_version=2.7.2
         airflow_version_comparable=$$(ver $${airflow_version})
         min_airflow_version=2.2.0
         min_airflow_version_comparable=$$(ver $${min_airflow_version})
@@ -250,6 +255,9 @@ services:
       _AIRFLOW_WWW_USER_CREATE: "true"
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+    user: "0:0"
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}:/sources
     networks:
       - airflownet
 
