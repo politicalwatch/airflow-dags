@@ -83,7 +83,8 @@ with DAG(
         trigger_rule='one_failed'
     )
 
-    slack_start >> extract_members >> update_groups >> extract_initiatives >> extract_votes >> tag >> alerts >> stats >> slack_end >> notify_error
+    # slack_start >> extract_members >> update_groups >> extract_initiatives >> extract_votes >> tag >> alerts >> stats >> slack_end >> notify_error
+    extract_members >> update_groups >> extract_initiatives >> extract_votes >> tag >> alerts >> stats
 
 if __name__ == "__main__":
     dag.cli()
