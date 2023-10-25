@@ -1,4 +1,5 @@
 .env
+.vscode
 logs/*
 keys/*
 dags/__pycache__
