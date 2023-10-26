@@ -68,7 +68,7 @@ with DAG(
     on_failure_callback=task_failure_alert,
     tags=["pro", "qhld"],
 ) as dag:
-    ssh = SSHHook(ssh_conn_id="qhld", key_file="./keys/pw_airflow")
+    ssh = SSHHook(ssh_conn_id="qhld", key_file="./keys/pw_airflow", cmd_timeout=7200)
 
     slack_start = SlackAPIPostOperator(
         task_id="slack_start",
@@ -97,6 +97,7 @@ with DAG(
         task_id="extract_votes",
         command="docker exec tipi-engine python quickex.py extractor votes",
         ssh_hook=ssh,
+        cmd_timeout=7200,
     )
 
     tag = SSHOperator(
@@ -136,7 +137,7 @@ with DAG(
         >> extract_members
         >> update_groups
         >> extract_initiatives
-        # >> extract_votes
+        >> extract_votes
         >> tag
         >> alerts
         >> stats

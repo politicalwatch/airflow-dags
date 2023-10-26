@@ -68,7 +68,7 @@ with DAG(
     on_failure_callback=task_failure_alert,
     tags=["pro", "qhld"],
 ) as dag:
-    ssh = SSHHook(ssh_conn_id="qhld", key_file="./keys/pw_airflow")
+    ssh = SSHHook(ssh_conn_id="qhld", key_file="./keys/pw_airflow", cmd_timeout=7200)
 
     slack_start = SlackAPIPostOperator(
         task_id="slack_start",
@@ -79,6 +79,7 @@ with DAG(
         task_id="footprint_calc",
         command="docker exec tipi-engine python quickex.py footprint",
         ssh_hook=ssh,
+        cmd_timeout=7200,
     )
 
     slack_end = SlackAPIPostOperator(

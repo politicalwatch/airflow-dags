@@ -68,7 +68,7 @@ with DAG(
     on_failure_callback=task_failure_alert,
     tags=["pro", "rtve"],
 ) as dag:
-    ssh = SSHHook(ssh_conn_id="rtve", key_file="./keys/pw_airflow")
+    ssh = SSHHook(ssh_conn_id="rtve", key_file="./keys/pw_airflow", cmd_timeout=7200)
 
     slack_start = SlackAPIPostOperator(
         task_id="slack_start",
@@ -79,12 +79,14 @@ with DAG(
         task_id="api_extract",
         command="docker exec engine python command.py api-extract",
         ssh_hook=ssh,
+        cmd_timeout=7200,
     )
 
     calculate_stats = SSHOperator(
         task_id="calculate_stats",
         command="docker exec engine python command.py calculate-stats",
         ssh_hook=ssh,
+        cmd_timeout=7200,
     )
 
     slack_end = SlackAPIPostOperator(
