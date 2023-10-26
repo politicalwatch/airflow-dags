@@ -2,9 +2,8 @@ from typing import Optional
 
 from airflow import DAG
 from airflow.models import TaskInstance, Variable
-from airflow.contrib.operators.ssh_operator import SSHOperator
-from airflow.operators.python_operator import PythonOperator
-from airflow.contrib.hooks.ssh_hook import SSHHook
+from airflow.providers.ssh.operators.ssh import SSHOperator
+from airflow.providers.ssh.hooks.ssh import SSHHook
 from airflow.providers.slack.operators.slack import SlackAPIPostOperator
 from airflow.providers.slack.hooks.slack_webhook import SlackWebhookHook
 from airflow.utils.dates import days_ago
@@ -20,6 +19,10 @@ def task_failure_alert(context: dict):
     """
     if not SLACK_WEBHOOK_URL:
         # Do nothing if slack webhook not set up
+        print(
+            "Task failure notification: missing SLACK_WEBHOOK_URL",
+            context["task_instance"].task_id,
+        )
         return
 
     last_task: Optional[TaskInstance] = context.get("task_instance")
