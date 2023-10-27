@@ -1,4 +1,5 @@
 from typing import Optional
+from datetime import datetime
 
 from airflow import DAG
 from airflow.models import TaskInstance, Variable
@@ -55,7 +56,7 @@ def task_failure_alert(context: dict):
 
 with DAG(
     dag_id="qhld_footprint",
-    start_date=days_ago(2),
+    start_date=datetime(2023, 10, 22),
     schedule_interval="0 12 * * 0",
     default_args={
         "slack_conn_id": "slack_api_default",
