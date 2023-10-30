@@ -21,12 +21,18 @@ with DAG(
     },
     on_success_callback=[
         send_slack_notification(
-            text=":green_circle: Sin errores en la extracción de subtítulos de RTVE.",
+            text=":large_green_circle: Sin errores en la extracción de subtítulos de RTVE.",
+            channel="#tech",
+            username="PW Notify",
+            icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
         )
     ],
     on_failure_callback=[
         send_slack_notification(
             text=":red_circle: Hay errores en la extracción de subtítulos de RTVE.",
+            channel="#tech",
+            username="PW Notify",
+            icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
         )
     ],
     tags=["pro", "rtve"],
@@ -53,6 +59,9 @@ with DAG(
         on_failure_callback=[
             send_slack_notification(
                 text=":warning: La tarea {{ ti.task_id }} ha fallado.",
+                channel="#tech",
+                username="PW Notify",
+                icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
             )
         ],
     )
