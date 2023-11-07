@@ -23,7 +23,10 @@ with DAG(
     },
     on_success_callback=[
         send_slack_notification(
-            text=":large_green_circle: Sin errores en procesamiento semanal de la huella en QHLD.",
+            text=":large_green_circle: Sin errores en procesamiento semanal de la huella en QHLD.\
+            \n Start: {{ execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
+            \n End: {{ next_execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
+            \n Duration: {{ ((next_execution_date - execution_date).total_seconds() // 3600)|int }} horas {{ ((next_execution_date - execution_date).total_seconds() // 60 % 60)|int }} minutos {{ ((next_execution_date - execution_date).total_seconds() % 60)|int }} segundos.",
             channel="#tech",
             username="PW Notify",
             icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
@@ -31,7 +34,10 @@ with DAG(
     ],
     on_failure_callback=[
         send_slack_notification(
-            text=":red_circle: Hay errores en procesamiento semanal de la huella en QHLD.",
+            text=":red_circle: Hay errores en procesamiento semanal de la huella en QHLD.\
+            \n Start: {{ execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
+            \n End: {{ next_execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
+            \n Duration: {{ ((next_execution_date - execution_date).total_seconds() // 3600)|int }} horas {{ ((next_execution_date - execution_date).total_seconds() // 60 % 60)|int }} minutos {{ ((next_execution_date - execution_date).total_seconds() % 60)|int }} segundos.",
             channel="#tech",
             username="PW Notify",
             icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
@@ -40,11 +46,6 @@ with DAG(
     tags=["pro", "qhld"],
 ) as dag:
     ssh = SSHHook(ssh_conn_id="qhld", key_file="./keys/pw_airflow", cmd_timeout=7200)
-
-    slack_start = SlackAPIPostOperator(
-        task_id="slack_start",
-        text="Empezando el cálculo semanal de la huella de QHLD.",
-    )
 
     footprint_calc = SSHOperator(
         task_id="footprint_calc",
@@ -61,12 +62,7 @@ with DAG(
         ],
     )
 
-    slack_end = SlackAPIPostOperator(
-        task_id="slack_end",
-        text="Fin del procesamiento semanal de la huella en QHLD.",
-    )
-
-    slack_start >> footprint_calc >> slack_end
+    footprint_calc
 
 if __name__ == "__main__":
     dag.cli()

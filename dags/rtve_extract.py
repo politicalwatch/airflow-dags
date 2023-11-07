@@ -21,7 +21,10 @@ with DAG(
     },
     on_success_callback=[
         send_slack_notification(
-            text=":large_green_circle: Sin errores en la extracción de subtítulos de RTVE.",
+            text=":large_green_circle: Sin errores en la extracción de subtítulos de RTVE.\
+            \n Start: {{ execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
+            \n End: {{ next_execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
+            \n Duration: {{ ((next_execution_date - execution_date).total_seconds() // 3600)|int }} horas {{ ((next_execution_date - execution_date).total_seconds() // 60 % 60)|int }} minutos {{ ((next_execution_date - execution_date).total_seconds() % 60)|int }} segundos.",
             channel="#tech",
             username="PW Notify",
             icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
@@ -29,7 +32,10 @@ with DAG(
     ],
     on_failure_callback=[
         send_slack_notification(
-            text=":red_circle: Hay errores en la extracción de subtítulos de RTVE.",
+            text=":red_circle: Hay errores en la extracción de subtítulos de RTVE.\
+            \n Start: {{ execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
+            \n End: {{ next_execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
+            \n Duration: {{ ((next_execution_date - execution_date).total_seconds() // 3600)|int }} horas {{ ((next_execution_date - execution_date).total_seconds() // 60 % 60)|int }} minutos {{ ((next_execution_date - execution_date).total_seconds() % 60)|int }} segundos.",
             channel="#tech",
             username="PW Notify",
             icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
@@ -38,11 +44,6 @@ with DAG(
     tags=["pro", "rtve"],
 ) as dag:
     ssh = SSHHook(ssh_conn_id="rtve", key_file="./keys/pw_airflow", cmd_timeout=7200)
-
-    slack_start = SlackAPIPostOperator(
-        task_id="slack_start",
-        text="Extrayendo nuevos subtítulos de RTVE.",
-    )
 
     api_extract = SSHOperator(
         task_id="api_extract",
@@ -66,12 +67,7 @@ with DAG(
         ],
     )
 
-    slack_end = SlackAPIPostOperator(
-        task_id="slack_end",
-        text="Fin del procesamiento de subtítulos de RTVE.",
-    )
-
-    slack_start >> api_extract >> calculate_stats >> slack_end
+    api_extract >> calculate_stats
 
 if __name__ == "__main__":
     dag.cli()

@@ -23,7 +23,10 @@ with DAG(
     },
     on_success_callback=[
         send_slack_notification(
-            text=":large_green_circle: Sin errores en procesamiento diario de datos de QHLD. \n Inicio en {{ context['dag'].start_date }}. Fin en {{ context['dag'].end_date }}. \n Tiempo de ejecución: {{ context['dag'].end_date - context['dag'].start_date }}.",
+            text=":large_green_circle: Sin errores en procesamiento diario de datos de QHLD. \
+            \n Start: {{ execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
+            \n End: {{ next_execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
+            \n Duration: {{ ((next_execution_date - execution_date).total_seconds() // 3600)|int }} horas {{ ((next_execution_date - execution_date).total_seconds() // 60 % 60)|int }} minutos {{ ((next_execution_date - execution_date).total_seconds() % 60)|int }} segundos.",
             channel="#tech",
             username="PW Notify",
             icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
@@ -31,7 +34,10 @@ with DAG(
     ],
     on_failure_callback=[
         send_slack_notification(
-            text=":red_circle: Hay errores en procesamiento diario de datos de QHLD.",
+            text=":red_circle: Hay errores en procesamiento diario de datos de QHLD.\
+            \n Start: {{ execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
+            \n End: {{ next_execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
+            \n Duration: {{ ((next_execution_date - execution_date).total_seconds() // 3600)|int }} horas {{ ((next_execution_date - execution_date).total_seconds() // 60 % 60)|int }} minutos {{ ((next_execution_date - execution_date).total_seconds() % 60)|int }} segundos.",
             channel="#tech",
             username="PW Notify",
             icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
@@ -40,11 +46,6 @@ with DAG(
     tags=["pro", "qhld"],
 ) as dag:
     ssh = SSHHook(ssh_conn_id="qhld", key_file="./keys/pw_airflow", cmd_timeout=7200)
-
-    slack_start = SlackAPIPostOperator(
-        task_id="slack_start",
-        text="Empezando el procesamiento diario de datos de QHLD.",
-    )
 
     extract_members = SSHOperator(
         task_id="extract_members",
@@ -145,21 +146,14 @@ with DAG(
         ],
     )
 
-    slack_end = SlackAPIPostOperator(
-        task_id="slack_end",
-        text="Fin del procesamiento diario de datos de QHLD.",
-    )
-
     (
-        slack_start
-        >> extract_members
+        extract_members
         >> update_groups
         >> extract_initiatives
         >> extract_votes
         >> tag
         >> alerts
         >> stats
-        >> slack_end
     )
 
 if __name__ == "__main__":
