@@ -23,7 +23,7 @@ with DAG(
     },
     on_success_callback=[
         send_slack_notification(
-            text=":large_green_circle: Sin errores en procesamiento diario de datos de QHLD. \n Inicio en {{ dag.start_date }}. Fin en {{ dag.end_date }}. \n Tiempo de ejecución: {{ dag.end_date - dag.start_date }}.",
+            text=":large_green_circle: Sin errores en procesamiento diario de datos de QHLD. \n Inicio en {{ context['dag'].start_date }}. Fin en {{ context['dag'].end_date }}. \n Tiempo de ejecución: {{ context['dag'].end_date - context['dag'].start_date }}.",
             channel="#tech",
             username="PW Notify",
             icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
