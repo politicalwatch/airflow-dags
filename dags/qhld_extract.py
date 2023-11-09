@@ -2,33 +2,38 @@ from datetime import datetime, timezone
 from airflow import DAG
 from airflow.models import Variable, TaskInstance
 from airflow.utils.state import State
-from airflow.operators.python import BranchPythonOperator
+from airflow.operators.python import PythonOperator, BranchPythonOperator
 from airflow.providers.ssh.operators.ssh import SSHOperator
 from airflow.providers.ssh.hooks.ssh import SSHHook
 from airflow.providers.slack.operators.slack import SlackAPIPostOperator
 from airflow.providers.slack.notifications.slack import send_slack_notification
 from airflow.utils.dates import days_ago
 
-SLACK_WEBHOOK_URL = Variable.get("SLACK_WEBHOOK_URL")
 SLACK_API_TOKEN = Variable.get("SLACK_API_TOKEN")
+
+
+def get_dag_metadata(**context):
+    start_datetime = datetime.now(timezone.utc)
+    context["ti"].xcom_push(key="start_datetime", value=start_datetime)
 
 
 def check_previous_tasks(**context):
     dag = context["dag"]
     tasks = dag.tasks
     execution_date = context["execution_date"]
+    start_date = context["ti"].xcom_pull(key="start_datetime")
     end_date = datetime.now(timezone.utc)
-    difference = end_date - execution_date
+    difference = end_date - start_date
     total_seconds = difference.total_seconds()
     hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     duration = "{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds))
 
     context["ti"].xcom_push(
-        key="start_datetime", value=execution_date.strftime("%Y-%m-%d %H:%M:%S")
+        key="start_date", value=start_date.strftime("%Y-%m-%d %H:%M:%S")
     )
     context["ti"].xcom_push(
-        key="end_datetime", value=end_date.strftime("%Y-%m-%d %H:%M:%S")
+        key="end_date", value=end_date.strftime("%Y-%m-%d %H:%M:%S")
     )
     context["ti"].xcom_push(key="duration", value=duration)
 
@@ -77,6 +82,12 @@ with DAG(
     tags=["pro", "qhld"],
 ) as dag:
     ssh = SSHHook(ssh_conn_id="qhld", key_file="./keys/pw_airflow", cmd_timeout=7200)
+
+    xcom_metadata = PythonOperator(
+        task_id="get_dag_metadata",
+        python_callable=get_dag_metadata,
+        provide_context=True,
+    )
 
     extract_members = SSHOperator(
         task_id="extract_members",
@@ -187,8 +198,8 @@ with DAG(
     slack_end_success = SlackAPIPostOperator(
         task_id="slack_end_success",
         text=":large_green_circle: Sin errores en procesamiento diario de datos de QHLD. \
+        \n Running: {{ ti.xcom_pull(key='start_date') }} => {{ ti.xcom_pull(key='end_date') }} \
         \n Tiempo de ejecución: {{ ti.xcom_pull(key='duration') }}",
-        # \n Running: {{ ti.xcom_pull(key='start_datetime') }} => {{ ti.xcom_pull(key='end_datetime') }} \
         dag=dag,
     )
 
@@ -199,7 +210,8 @@ with DAG(
     )
 
     (
-        extract_members
+        xcom_metadata
+        >> extract_members
         >> update_groups
         >> extract_initiatives
         >> extract_votes
