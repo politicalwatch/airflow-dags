@@ -2,7 +2,9 @@
 .vscode
 logs/*
 keys/*
+backups/*
 dags/__pycache__
+dags/test_*
 airflow.cfg
 airflow.db
 airflow-webserver.pid
