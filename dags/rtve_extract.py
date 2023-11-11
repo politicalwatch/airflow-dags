@@ -165,8 +165,8 @@ with DAG(
     slack_end_success = SlackAPIPostOperator(
         task_id="slack_end_success",
         text=":large_green_circle: Sin errores en la extracción de subtítulos de RTVE. \
-        # \n Running: {{ ti.xcom_pull(key='start_date') }} => {{ ti.xcom_pull(key='end_date') }} \
         \n Tiempo de ejecución: {{ ti.xcom_pull(key='duration') }}",
+        # \n Running: {{ ti.xcom_pull(key='start_date') }} => {{ ti.xcom_pull(key='end_date') }} \
         dag=dag,
     )
 
@@ -178,6 +178,7 @@ with DAG(
 
     rtve_dump = SSHOperator(
         task_id="rtve_dump",
+        trigger_rule="none_failed",
         ssh_hook=ssh,
         cmd_timeout=7200,
         command="""
@@ -203,6 +204,7 @@ with DAG(
 
     rtve_copy_bkp = SFTPOperator(
         task_id="rtve_copy_bkp",
+        trigger_rule="none_failed",
         ssh_hook=ssh,
         local_filepath="/home/airflow/backups/rtve/rtve-daily-{{ ds }}.sql",
         remote_filepath="/home/ubuntu/backups/rtve-daily-{{ ds }}.sql",
@@ -228,6 +230,7 @@ with DAG(
 
     rtve_to_drive = PythonOperator(
         task_id="rtve_to_drive",
+        trigger_rule="none_failed",
         python_callable=upload_to_drive,
         op_kwargs={
             "filepath": "/home/airflow/backups/rtve/rtve-daily-{{ ds }}.sql",
@@ -254,6 +257,7 @@ with DAG(
 
     rtve_delete_old = PythonOperator(
         task_id="rtve_delete_old",
+        trigger_rule="none_failed",
         python_callable=keep_last_two_files,
         op_kwargs={
             "directory": "/home/airflow/backups/rtve",

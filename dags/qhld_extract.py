@@ -243,8 +243,8 @@ with DAG(
     slack_end_success = SlackAPIPostOperator(
         task_id="slack_end_success",
         text=":large_green_circle: Sin errores en procesamiento diario de datos de QHLD. \
-        \n Running: {{ ti.xcom_pull(key='start_date') }} => {{ ti.xcom_pull(key='end_date') }} \
         \n Tiempo de ejecución: {{ ti.xcom_pull(key='duration') }}",
+        # \n Running: {{ ti.xcom_pull(key='start_date') }} => {{ ti.xcom_pull(key='end_date') }} \
         dag=dag,
     )
 
@@ -256,6 +256,7 @@ with DAG(
 
     qhld_dump = SSHOperator(
         task_id="qhld_dump",
+        trigger_rule="none_failed",
         ssh_hook=ssh,
         cmd_timeout=7200,
         command="""
@@ -281,6 +282,7 @@ with DAG(
 
     qhld_copy_bkp = SFTPOperator(
         task_id="qhld_copy_bkp",
+        trigger_rule="none_failed",
         ssh_hook=ssh,
         local_filepath="/home/airflow/backups/qhld/tipidb-daily-{{ ds }}.gz",
         remote_filepath="/home/ubuntu/backups/tipidb-daily-{{ ds }}.gz",
@@ -306,6 +308,7 @@ with DAG(
 
     qhld_to_drive = PythonOperator(
         task_id="qhld_to_drive",
+        trigger_rule="none_failed",
         python_callable=upload_to_drive,
         op_kwargs={
             "filepath": "/home/airflow/backups/qhld/tipidb-daily-{{ ds }}.gz",
@@ -332,6 +335,7 @@ with DAG(
 
     qhld_delete_old = PythonOperator(
         task_id="qhld_delete_old",
+        trigger_rule="none_failed",
         python_callable=keep_last_two_files,
         op_kwargs={
             "directory": "/home/airflow/backups/qhld",
