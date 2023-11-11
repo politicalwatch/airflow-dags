@@ -53,7 +53,13 @@ def check_previous_tasks(**context):
         task_instance = TaskInstance(task, execution_date)
         if task_instance.current_state() == State.FAILED:
             return "slack_end_failure"
-    return "slack_end_success"
+    return [
+        "slack_end_success",
+        "qhld_dump",
+        "qhld_copy_bkp",
+        "qhld_to_drive",
+        "qhld_delete_old",
+    ]
 
 
 def keep_last_two_files(directory: str, pattern: str):
