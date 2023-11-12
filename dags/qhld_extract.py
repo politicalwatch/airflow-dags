@@ -259,9 +259,7 @@ with DAG(
         trigger_rule="none_failed",
         ssh_hook=ssh,
         cmd_timeout=7200,
-        command="""
-            docker exec tipi-mongo  mongodump --username tipi --password tipi --db tipidb --archive > ~/backups/tipidb-daily-$(date +%Y-%m-%d).gz
-        """,
+        command="docker exec tipi-mongo  mongodump --username tipi --password tipi --db tipidb --archive > ~/backups/tipidb-daily-{{ ds }}.gz",
         on_success_callback=[
             send_slack_notification(
                 text=":large_green_circle: La tarea QHLD: {{ ti.task_id }} ha finalizado correctamente.",

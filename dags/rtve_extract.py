@@ -181,9 +181,7 @@ with DAG(
         trigger_rule="none_failed",
         ssh_hook=ssh,
         cmd_timeout=7200,
-        command="""
-            docker exec rtve2030-postgres-1 pg_dump -U rtve -d rtve > ~/backups/rtve-daily-$(date +%Y-%m-%d).sql
-        """,
+        command="docker exec rtve2030-postgres-1 pg_dump -U rtve -d rtve > ~/backups/rtve-daily-{{ ds }}.sql",
         on_success_callback=[
             send_slack_notification(
                 text=":large_green_circle: La tarea RTVE: {{ ti.task_id }} ha finalizado correctamente.",
