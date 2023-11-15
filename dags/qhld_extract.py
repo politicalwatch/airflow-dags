@@ -297,7 +297,7 @@ with DAG(
     )
 
     qhld_delete_old_prod = SSHOperator(
-        task_id="qhld_dump",
+        task_id="qhld_delete_old_prod",
         trigger_rule="none_failed",
         ssh_hook=ssh,
         cmd_timeout=7200,
