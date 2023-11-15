@@ -1,9 +1,8 @@
 import fnmatch
 import os
 from datetime import datetime, timezone
-from google.oauth2.service_account import Credentials
-from googleapiclient.http import MediaFileUpload
-from googleapiclient.discovery import build
+import boto3
+from botocore.exceptions import ClientError
 
 from airflow import DAG
 from airflow.models import Variable, TaskInstance
@@ -18,7 +17,9 @@ from airflow.utils.dates import days_ago
 
 SLACK_API_TOKEN = Variable.get("SLACK_API_TOKEN")
 QHLD_DRIVE_FOLDER_ID = Variable.get("QHLD_DRIVE_FOLDER_ID")
-RTVE_DRIVE_FOLDER_ID = Variable.get("RTVE_DRIVE_FOLDER_ID")
+S3_BUCKET_NAME = Variable.get("S3_BUCKET_NAME")
+AWS_ACCESS_KEY_ID = Variable.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = Variable.get("AWS_SECRET_ACCESS_KEY")
 
 
 def get_dag_metadata(**context):
@@ -56,7 +57,8 @@ def check_previous_tasks(**context):
         "slack_end_success",
         "rtve_dump",
         "rtve_copy_bkp",
-        "rtve_to_drive",
+        "rtve_to_s3",
+        "rtve_delete_old_prod",
         "rtve_delete_old",
     ]
 
@@ -76,18 +78,20 @@ def keep_last_two_files(directory: str, pattern: str):
         os.remove(file)
 
 
-def upload_to_drive(filepath, filename, folder_id):
-    creds = Credentials.from_service_account_file("./keys/credentials.json")
-    service = build("drive", "v3", credentials=creds)
+def upload_to_s3(file_name, bucket, object_name=None):
+    if object_name is None:
+        object_name = file_name
 
-    file_metadata = {"name": filename, "parents": [folder_id]}
-    media = MediaFileUpload(filepath, resumable=True)
-    file = (
-        service.files()
-        .create(body=file_metadata, media_body=media, fields="id")
-        .execute()
+    s3_client = boto3.client(
+        "s3",
+        region_name="eu-south-2",
     )
-    print("File ID: %s" % file.get("id"))
+    try:
+        response = s3_client.upload_file(file_name, bucket, object_name)
+    except ClientError as e:
+        print(e)
+        return False
+    return True
 
 
 with DAG(
@@ -101,28 +105,6 @@ with DAG(
         "icon_url": "https://politicalwatch.es/images/icons/icon_192px.png",
         "channel": "#tech",
     },
-    # on_success_callback=[
-    #     send_slack_notification(
-    #         text=":large_green_circle: Sin errores en la extracción de subtítulos de RTVE.\
-    #         \n Start: {{ execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
-    #         \n End: {{ next_execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
-    #         \n Duration: {{ ((next_execution_date - execution_date).total_seconds() // 3600)|int }} horas {{ ((next_execution_date - execution_date).total_seconds() // 60 % 60)|int }} minutos {{ ((next_execution_date - execution_date).total_seconds() % 60)|int }} segundos.",
-    #         channel="#tech",
-    #         username="PW Notify",
-    #         icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
-    #     )
-    # ],
-    # on_failure_callback=[
-    #     send_slack_notification(
-    #         text=":red_circle: Hay errores en la extracción de subtítulos de RTVE.\
-    #         \n Start: {{ execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
-    #         \n End: {{ next_execution_date.strftime('%d-%m-%Y %H:%M:%S') }}.\
-    #         \n Duration: {{ ((next_execution_date - execution_date).total_seconds() // 3600)|int }} horas {{ ((next_execution_date - execution_date).total_seconds() // 60 % 60)|int }} minutos {{ ((next_execution_date - execution_date).total_seconds() % 60)|int }} segundos.",
-    #         channel="#tech",
-    #         username="PW Notify",
-    #         icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
-    #     )
-    # ],
     tags=["pro", "rtve"],
 ) as dag:
     ssh = SSHHook(ssh_conn_id="rtve", key_file="./keys/pw_airflow", cmd_timeout=7200)
@@ -208,14 +190,6 @@ with DAG(
         remote_filepath="/home/ubuntu/backups/rtve-daily-{{ ds }}.sql",
         operation="get",
         create_intermediate_dirs=True,
-        # on_success_callback=[
-        #     send_slack_notification(
-        #         text=":large_green_circle: La tarea RTVE: {{ ti.task_id }} ha finalizado correctamente.",
-        #         channel="#tech",
-        #         username="PW Notify",
-        #         icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
-        #     )
-        # ],
         on_failure_callback=[
             send_slack_notification(
                 text=":warning: La tarea RTVE: {{ ti.task_id }} ha fallado.",
@@ -226,26 +200,26 @@ with DAG(
         ],
     )
 
-    rtve_to_drive = PythonOperator(
-        task_id="rtve_to_drive",
+    rtve_to_s3 = PythonOperator(
+        task_id="upload_to_s3",
         trigger_rule="none_failed",
-        python_callable=upload_to_drive,
+        python_callable=upload_to_s3,
         op_kwargs={
-            "filepath": "/home/airflow/backups/rtve/rtve-daily-{{ ds }}.sql",
-            "filename": "rtve-daily-{{ ds }}.sql",
-            "folder_id": RTVE_DRIVE_FOLDER_ID,
+            "file_name": "/home/airflow/backups/rtve/rtve-daily-{{ ds }}.sql",
+            "bucket": S3_BUCKET_NAME,
+            "object_name": "rtve-daily-{{ ds }}.sql",
         },
-        # on_success_callback=[
-        #     send_slack_notification(
-        #         text=":large_green_circle: La tarea RTVE: {{ ti.task_id }} ha finalizado correctamente.",
-        #         channel="#tech",
-        #         username="PW Notify",
-        #         icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
-        #     )
-        # ],
+    )
+
+    rtve_delete_old_prod = SSHOperator(
+        task_id="qhld_dump",
+        trigger_rule="none_failed",
+        ssh_hook=ssh,
+        cmd_timeout=7200,
+        command="ls -r /home/ubuntu/backups/rtve-daily-????-??-??.sql | awk 'NR>2' | xargs rm -f --",
         on_failure_callback=[
             send_slack_notification(
-                text=":warning: La tarea RTVE: {{ ti.task_id }} ha fallado.",
+                text=":warning: La tarea QHLD: {{ ti.task_id }} ha fallado.",
                 channel="#tech",
                 username="PW Notify",
                 icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
@@ -261,14 +235,6 @@ with DAG(
             "directory": "/home/airflow/backups/rtve",
             "pattern": "rtve-daily-????-??-??.sql",
         },
-        # on_success_callback=[
-        #     send_slack_notification(
-        #         text=":large_green_circle: La tarea QHLD: {{ ti.task_id }} ha finalizado correctamente.",
-        #         channel="#tech",
-        #         username="PW Notify",
-        #         icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
-        #     )
-        # ],
         on_failure_callback=[
             send_slack_notification(
                 text=":warning: La tarea QHLD: {{ ti.task_id }} ha fallado.",
@@ -287,7 +253,8 @@ with DAG(
         >> [slack_end_success, slack_end_failure]
         >> rtve_dump
         >> rtve_copy_bkp
-        >> rtve_to_drive
+        >> rtve_to_s3
+        >> rtve_delete_old_prod
         >> rtve_delete_old
     )
 
