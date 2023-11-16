@@ -201,7 +201,7 @@ with DAG(
     )
 
     rtve_to_s3 = PythonOperator(
-        task_id="upload_to_s3",
+        task_id="rtve_to_s3",
         trigger_rule="none_failed",
         python_callable=upload_to_s3,
         op_kwargs={
