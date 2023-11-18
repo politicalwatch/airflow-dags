@@ -212,6 +212,14 @@ with DAG(
             "bucket": S3_BUCKET_NAME,
             "object_name": "rtve-daily-{{ ds }}.sql",
         },
+        on_failure_callback=[
+            send_slack_notification(
+                text=":warning: La tarea QHLD: {{ ti.task_id }} ha fallado.",
+                channel="#tech",
+                username="PW Notify",
+                icon_url="https://politicalwatch.es/images/icons/icon_192px.png",
+            )
+        ],
     )
 
     rtve_delete_old_prod = SSHOperator(
