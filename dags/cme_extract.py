@@ -16,7 +16,6 @@ from airflow.providers.slack.notifications.slack import send_slack_notification
 from airflow.utils.dates import days_ago
 
 SLACK_API_TOKEN = Variable.get("SLACK_API_TOKEN")
-QHLD_DRIVE_FOLDER_ID = Variable.get("QHLD_DRIVE_FOLDER_ID")
 S3_BUCKET_NAME = Variable.get("S3_BUCKET_NAME")
 AWS_ACCESS_KEY_ID = Variable.get("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = Variable.get("AWS_SECRET_ACCESS_KEY")
@@ -100,7 +99,7 @@ def upload_to_s3(file_name, bucket, object_name=None):
 with DAG(
     dag_id="cme_extract",
     start_date=days_ago(2),
-    schedule_interval="@daily",
+    schedule_interval="@weekly",
     default_args={
         "slack_conn_id": "slack_api_default",
         "username": "PW Notify",
