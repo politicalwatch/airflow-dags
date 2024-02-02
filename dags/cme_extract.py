@@ -118,7 +118,7 @@ with DAG(
     )
 
     ftp_extract = SSHOperator(
-        task_id="api_extract",
+        task_id="ftp_extract",
         command="docker exec engine python command.py ftp-extract",
         ssh_hook=ssh,
         cmd_timeout=7200,
