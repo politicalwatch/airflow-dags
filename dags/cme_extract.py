@@ -119,14 +119,14 @@ with DAG(
 
     ftp_extract = SSHOperator(
         task_id="ftp_extract",
-        command="docker exec engine python command.py ftp-extract",
+        command="docker exec cme2030-engine python command.py ftp-extract",
         ssh_hook=ssh,
         cmd_timeout=7200,
     )
 
     calculate_stats = SSHOperator(
         task_id="calculate_stats",
-        command="docker exec engine python command.py calculate-stats",
+        command="docker exec cme2030-engine python command.py calculate-stats",
         ssh_hook=ssh,
         cmd_timeout=7200,
         on_failure_callback=[
