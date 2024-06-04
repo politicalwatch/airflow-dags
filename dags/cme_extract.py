@@ -99,7 +99,7 @@ def upload_to_s3(file_name, bucket, object_name=None):
 with DAG(
     dag_id="cme_extract",
     start_date=datetime(2024, 2, 4),
-    schedule_interval="0 0 * * 0",
+    schedule_interval="@daily",
     default_args={
         "slack_conn_id": "slack_api_default",
         "username": "PW Notify",
