@@ -11,6 +11,7 @@ with DAG(
     dag_id="congreso2030py_extract",
     start_date=days_ago(2),
     schedule_interval='@daily',
+    catchup=False,
     tags=['pro', 'congreso2030py']
 ) as dag:
 

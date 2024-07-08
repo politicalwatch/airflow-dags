@@ -100,6 +100,7 @@ with DAG(
     dag_id="cme_extract",
     start_date=datetime(2024, 2, 4),
     schedule_interval="@daily",
+    catchup=False,
     default_args={
         "slack_conn_id": "slack_api_default",
         "username": "PW Notify",
@@ -165,7 +166,7 @@ with DAG(
         trigger_rule="none_failed",
         ssh_hook=ssh,
         cmd_timeout=7200,
-        command="docker exec cme2030-postgres-1 pg_dump -U cme -d cme > ~/backups/cme-weekly-{{ ds }}.sql",
+        command="docker exec cme2030-postgres-1 pg_dump -U cme -d cme > ~/backups/cme-daily-{{ ds }}.sql",
         on_success_callback=[
             send_slack_notification(
                 text=":large_green_circle: La tarea CME: {{ ti.task_id }} ha finalizado correctamente.",
@@ -188,8 +189,8 @@ with DAG(
         task_id="cme_copy_bkp",
         trigger_rule="none_failed",
         ssh_hook=ssh,
-        local_filepath="/home/airflow/backups/cme/cme-weekly-{{ ds }}.sql",
-        remote_filepath="/home/ubuntu/backups/cme-weekly-{{ ds }}.sql",
+        local_filepath="/home/airflow/backups/cme/cme-daily-{{ ds }}.sql",
+        remote_filepath="/home/ubuntu/backups/cme-daily-{{ ds }}.sql",
         operation="get",
         create_intermediate_dirs=True,
         on_failure_callback=[
@@ -207,9 +208,9 @@ with DAG(
         trigger_rule="none_failed",
         python_callable=upload_to_s3,
         op_kwargs={
-            "file_name": "/home/airflow/backups/cme/cme-weekly-{{ ds }}.sql",
+            "file_name": "/home/airflow/backups/cme/cme-daily-{{ ds }}.sql",
             "bucket": S3_BUCKET_NAME,
-            "object_name": "cme-weekly-{{ ds }}.sql",
+            "object_name": "cme-daily-{{ ds }}.sql",
         },
         on_failure_callback=[
             send_slack_notification(
@@ -226,7 +227,7 @@ with DAG(
         trigger_rule="none_failed",
         ssh_hook=ssh,
         cmd_timeout=7200,
-        command="ls -r /home/ubuntu/backups/cme-weekly-????-??-??.sql | awk 'NR>2' | xargs rm -f --",
+        command="ls -r /home/ubuntu/backups/cme-daily-????-??-??.sql | awk 'NR>2' | xargs rm -f --",
         on_failure_callback=[
             send_slack_notification(
                 text=":warning: La tarea CME: {{ ti.task_id }} ha fallado.",
@@ -243,7 +244,7 @@ with DAG(
         python_callable=keep_last_two_files,
         op_kwargs={
             "directory": "/home/airflow/backups/cme",
-            "pattern": "cme-weekly-????-??-??.sql",
+            "pattern": "cme-daily-????-??-??.sql",
         },
         on_failure_callback=[
             send_slack_notification(

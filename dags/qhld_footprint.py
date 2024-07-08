@@ -49,6 +49,7 @@ with DAG(
     dag_id="qhld_footprint",
     start_date=datetime(2023, 10, 22),
     schedule_interval="0 12 * * 0",
+    catchup=False,
     default_args={
         "slack_conn_id": "slack_api_default",
         "username": "PW Notify",

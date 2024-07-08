@@ -84,6 +84,7 @@ dag = DAG(
     default_args=default_args,
     schedule_interval=SCHEDULE_INTERVAL,
     start_date=START_DATE,
+    catchup=False,
     tags=['maintenance', 'airflow-maintenance-dags'],
     template_undefined=jinja2.Undefined
 )

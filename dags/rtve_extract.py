@@ -101,6 +101,7 @@ with DAG(
     dag_id="rtve_extract",
     start_date=days_ago(2),
     schedule_interval="@daily",
+    catchup=False,
     default_args={
         "slack_conn_id": "slack_api_default",
         "username": "PW Notify",
