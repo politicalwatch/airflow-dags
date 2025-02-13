@@ -126,12 +126,12 @@ with DAG(
         cmd_timeout=7200,
     )
 
-    # ftp_extract = SSHOperator(
-    #     task_id="ftp_extract",
-    #     command="docker exec engine python command.py ftp-extract",
-    #     ssh_hook=ssh,
-    #     cmd_timeout=7200,
-    # )
+    ftp_extract = SSHOperator(
+        task_id="ftp_extract",
+        command="docker exec engine python command.py ftp-extract",
+        ssh_hook=ssh,
+        cmd_timeout=7200,
+    )
 
     calculate_stats = SSHOperator(
         task_id="calculate_stats",
@@ -267,7 +267,7 @@ with DAG(
     (
         xcom_metadata
         >> api_extract
-        # >> ftp_extract
+        >> ftp_extract
         >> calculate_stats
         >> branch
         >> [slack_end_success, slack_end_failure]
