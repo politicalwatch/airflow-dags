@@ -121,14 +121,14 @@ with DAG(
 
     api_extract = SSHOperator(
         task_id="api_extract",
-        command="docker exec engine python command.py api-extract",
+        command="docker exec engine python command.py api-extract tve 20150101",
         ssh_hook=ssh,
         cmd_timeout=7200,
     )
 
-    ftp_extract = SSHOperator(
-        task_id="ftp_extract",
-        command="docker exec engine python command.py ftp-extract",
+    rne_extract = SSHOperator(
+        task_id="rne_extract",
+        command="docker exec engine python command.py api-extract rne 20250601",
         ssh_hook=ssh,
         cmd_timeout=7200,
     )
@@ -267,7 +267,7 @@ with DAG(
     (
         xcom_metadata
         >> api_extract
-        >> ftp_extract
+        >> rne_extract
         >> calculate_stats
         >> branch
         >> [slack_end_success, slack_end_failure]
