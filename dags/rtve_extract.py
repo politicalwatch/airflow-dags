@@ -128,7 +128,7 @@ with DAG(
 
     rne_extract = SSHOperator(
         task_id="rne_extract",
-        command="docker exec engine python command.py api-extract rne 20250601",
+        command="docker exec engine python command.py api-extract rne 20250213",
         ssh_hook=ssh,
         cmd_timeout=7200,
     )
