@@ -39,6 +39,11 @@ docker-compose up airflow-init
 docker-compose up
 ```
 
+4. Create backup project folders:
+
+Check DAGs specs for more info
+
+
 ## Commands
 There is a set of commands to interact with Airflow from the command line. You can use them using `docker-compose run airflow-worker airflow [COMMAND]` or the utility shell file `./airflow.sh [COMMAND]`.
 
