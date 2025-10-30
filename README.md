@@ -46,6 +46,14 @@ docker-compose up
 
 Check DAGs specs for more info
 
+5. Cleanup logs
+
+Add this configuration lines
+```
+[logging]
+log_retention_days = 30
+```
+
 
 ## Commands
 There is a set of commands to interact with Airflow from the command line. You can use them using `docker-compose run airflow-worker airflow [COMMAND]` or the utility shell file `./airflow.sh [COMMAND]`.
