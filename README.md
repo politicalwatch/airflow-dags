@@ -12,8 +12,9 @@ sh local_install.sh
 
 2. Copy the `airflow.cfg.example` into `airflow.cfg` and configure the paths to point to this folder.
 ```
-cp airflow.cfg.example airflow.cfg
+cp config/airflow.cfg.example config/airflow.cfg
 ```
+Or creates a new one from scratch
 
 3. Make sure the variable `AIRFLOW_HOME` is configured in your system and it is pointing to this folder.
 
