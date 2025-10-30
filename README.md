@@ -29,6 +29,8 @@ airflow scheduler
 echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env
 ```
 
+Importante que el usuario que usemos en SSH coincida con el usuario que usemos en airflow para evitar problemas de permisos en los volúmenes.
+
 2. Execute init script:
 ```
 docker-compose up airflow-init
