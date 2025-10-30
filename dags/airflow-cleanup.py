@@ -10,5 +10,5 @@ with DAG(
 ) as dag:
     cleanup = BashOperator(
         task_id="cleanup_old_runs",
-        bash_command="airflow db clean --clean-before-timestamp $(date -d '30 days ago' +%Y-%m-%dT%H:%M:%S') --yes",
+        bash_command="airflow db clean --clean-before-timestamp $(date -d '30 days ago' +%Y-%m-%dT%H:%M:%S) --yes",
     )
