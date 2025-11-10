@@ -114,7 +114,6 @@ with DAG(
     slack_end_success = SlackAPIPostOperator(
         task_id="slack_end_success",
         text=":large_green_circle: Sin errores en procesamiento semanal de la huella en QHLD. \
-        \n Running: {{ ti.xcom_pull(key='start_date') }} => {{ ti.xcom_pull(key='end_date') }} \
         \n Tiempo de ejecución: {{ ti.xcom_pull(key='duration') }}",
         dag=dag,
     )
