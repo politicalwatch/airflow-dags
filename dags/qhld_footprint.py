@@ -91,7 +91,7 @@ with DAG(
 
     footprint_calc = SSHOperator(
         task_id="footprint_calc",
-        command="docker exec tipi-engine python quickex.py footprint",
+        command="docker exec qhld-engine python quickex.py footprint",
         ssh_hook=ssh,
         cmd_timeout=7200,
         on_failure_callback=[

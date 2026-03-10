@@ -121,7 +121,7 @@ with DAG(
 
     extract_members = SSHOperator(
         task_id="extract_members",
-        command="docker exec tipi-engine python quickex.py extractor members",
+        command="docker exec qhld-engine python quickex.py extractor members",
         ssh_hook=ssh,
         on_failure_callback=[
             send_slack_notification(
@@ -135,7 +135,7 @@ with DAG(
 
     update_groups = SSHOperator(
         task_id="update_groups",
-        command="docker exec tipi-engine python quickex.py extractor calculate-composition-groups",
+        command="docker exec qhld-engine python quickex.py extractor calculate-composition-groups",
         ssh_hook=ssh,
         on_failure_callback=[
             send_slack_notification(
@@ -149,7 +149,7 @@ with DAG(
 
     extract_initiatives = SSHOperator(
         task_id="extract_initiatives",
-        command="docker exec tipi-engine python quickex.py extractor initiatives",
+        command="docker exec qhld-engine python quickex.py extractor initiatives",
         ssh_hook=ssh,
         on_failure_callback=[
             send_slack_notification(
@@ -163,7 +163,7 @@ with DAG(
 
     extract_votes = SSHOperator(
         task_id="extract_votes",
-        command="docker exec tipi-engine python quickex.py extractor votes",
+        command="docker exec qhld-engine python quickex.py extractor votes",
         ssh_hook=ssh,
         cmd_timeout=7200,
         on_failure_callback=[
@@ -178,7 +178,7 @@ with DAG(
 
     tag = SSHOperator(
         task_id="tag",
-        command="docker exec tipi-engine python quickex.py tagger all",
+        command="docker exec qhld-engine python quickex.py tagger all",
         ssh_hook=ssh,
         on_failure_callback=[
             send_slack_notification(
@@ -192,7 +192,7 @@ with DAG(
 
     alerts = SSHOperator(
         task_id="alerts",
-        command="docker exec tipi-engine python quickex.py send-alerts",
+        command="docker exec qhld-engine python quickex.py send-alerts",
         ssh_hook=ssh,
         on_failure_callback=[
             send_slack_notification(
@@ -206,7 +206,7 @@ with DAG(
 
     stats = SSHOperator(
         task_id="stats",
-        command="docker exec tipi-engine python quickex.py stats",
+        command="docker exec qhld-engine python quickex.py stats",
         ssh_hook=ssh,
         on_failure_callback=[
             send_slack_notification(
@@ -241,7 +241,7 @@ with DAG(
         trigger_rule="none_failed",
         ssh_hook=ssh,
         cmd_timeout=7200,
-        command="docker exec tipi-mongo  mongodump --username tipi --password tipi --db tipidb --archive > ~/backups/tipidb-daily-{{ ds }}.gz",
+        command="docker exec qhld-mongo  mongodump --username qhld --password qhld --db qhlddb --archive > ~/backups/qhlddb-daily-{{ ds }}.gz",
         on_success_callback=[
             send_slack_notification(
                 text=":large_green_circle: La tarea QHLD: {{ ti.task_id }} ha finalizado correctamente.",
@@ -264,8 +264,8 @@ with DAG(
         task_id="qhld_copy_bkp",
         trigger_rule="none_failed",
         ssh_hook=ssh,
-        local_filepath="/home/airflow/backups/qhld/tipidb-daily-{{ ds }}.gz",
-        remote_filepath="/home/ubuntu/backups/tipidb-daily-{{ ds }}.gz",
+        local_filepath="/home/airflow/backups/qhld/qhlddb-daily-{{ ds }}.gz",
+        remote_filepath="/home/ubuntu/backups/qhlddb-daily-{{ ds }}.gz",
         operation="get",
         create_intermediate_dirs=True,
         on_failure_callback=[
@@ -283,9 +283,9 @@ with DAG(
         trigger_rule="none_failed",
         python_callable=upload_to_s3,
         op_kwargs={
-            "file_name": "/home/airflow/backups/qhld/tipidb-daily-{{ ds }}.gz",
+            "file_name": "/home/airflow/backups/qhld/qhlddb-daily-{{ ds }}.gz",
             "bucket": S3_BUCKET_NAME,
-            "object_name": "tipidb-daily-{{ ds }}.gz",
+            "object_name": "qhlddb-daily-{{ ds }}.gz",
         },
         on_failure_callback=[
             send_slack_notification(
@@ -302,7 +302,7 @@ with DAG(
         trigger_rule="none_failed",
         ssh_hook=ssh,
         cmd_timeout=7200,
-        command="ls -r /home/ubuntu/backups/tipidb-daily-????-??-??.gz | awk 'NR>2' | xargs rm -f --",
+        command="ls -r /home/ubuntu/backups/qhlddb-daily-????-??-??.gz | awk 'NR>2' | xargs rm -f --",
         on_failure_callback=[
             send_slack_notification(
                 text=":warning: La tarea QHLD: {{ ti.task_id }} ha fallado.",
@@ -319,7 +319,7 @@ with DAG(
         python_callable=keep_last_two_files,
         op_kwargs={
             "directory": "/home/airflow/backups/qhld",
-            "pattern": "tipidb-daily-????-??-??.gz",
+            "pattern": "qhlddb-daily-????-??-??.gz",
         },
         on_failure_callback=[
             send_slack_notification(
