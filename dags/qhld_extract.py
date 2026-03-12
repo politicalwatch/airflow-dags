@@ -241,7 +241,7 @@ with DAG(
         trigger_rule="none_failed",
         ssh_hook=ssh,
         cmd_timeout=7200,
-        command="docker exec qhld-mongo  mongodump --username qhld --password qhld --db qhlddb --archive > ~/backups/qhlddb-daily-{{ ds }}.gz",
+        command="docker exec qhld-mongo  mongodump --username qhld --password qhld --authenticationDatabase admin --db qhlddb --archive > ~/backups/qhlddb-daily-{{ ds }}.gz",
         on_success_callback=[
             send_slack_notification(
                 text=":large_green_circle: La tarea QHLD: {{ ti.task_id }} ha finalizado correctamente.",
